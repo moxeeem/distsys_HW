@@ -28,5 +28,5 @@ async def do_reliable_request(url: str, observer: ResultsObserver) -> None:
                 return
             except Exception as e:
                 if attempt == max_retries - 1:
-                    raise
+                    raise e
                 await asyncio.sleep(1)
