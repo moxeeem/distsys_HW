@@ -1,5 +1,5 @@
 import abc
-
+import asyncio
 import httpx
 
 
@@ -18,13 +18,15 @@ async def do_reliable_request(url: str, observer: ResultsObserver) -> None:
 
     Все успешно полученные результаты должны регистрироваться с помощью обсёрвера.
     """
-
+    max_retries = 10
     async with httpx.AsyncClient() as client:
-        # YOUR CODE GOES HERE
-        response = await client.get(url)
-        response.raise_for_status()
-        data = response.read()
-
-        observer.observe(data)
-        return
-        #####################
+        for attempt in range(max_retries):
+            try:
+                response = await client.get(url, timeout=10.0)
+                response.raise_for_status()
+                observer.observe(response.content)
+                return
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise e
+                await asyncio.sleep(1)
